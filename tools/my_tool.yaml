@@ -1,0 +1,142 @@
+# =============================================================================
+# ツール定義
+# =============================================================================
+# 各ツールの情報・パラメータ・出力を定義する YAML ファイルです。
+# ひとつの Provider に複数のツールを含めることができます。
+#
+# TODO: 以下の項目をプロジェクトに合わせて変更してください。
+# =============================================================================
+
+identity:
+  name: my_tool                              # TODO: ツールID（一意、英数字とアンダースコア）
+  author: your-name                          # TODO: 作者名
+  label:
+    en_US: My Tool                           # TODO: 英語表示名
+    ja_JP: マイツール                         # TODO: 日本語表示名
+
+# =============================================================================
+# ツールの説明
+# =============================================================================
+# human: エンドユーザー向けの説明（UI に表示される）
+# llm:   LLM 向けの説明（Agent がツールを選択する際の判断材料になる）
+#        → LLM がいつ・どう使うか分かるように、できるだけ具体的に書く
+
+description:
+  human:
+    en_US: >
+      Describe what this tool does for end users.
+      Example: "Search the web and return relevant results."
+    ja_JP: >
+      このツールがエンドユーザーに提供する機能の説明。
+      例: 「Webを検索し、関連する結果を返します。」
+  llm: >
+    Describe what this tool does so the LLM knows when and how to use it.
+    Be specific about input expectations and output format.
+    Example: "A tool that searches the web for information. Input should be
+    a search query string. Returns a list of relevant results with titles,
+    URLs, and snippets."
+
+# =============================================================================
+# パラメータ定義
+# =============================================================================
+# name:              パラメータ名（一意）
+# type:              型（下記参照）
+# required:          必須かどうか
+# label:             UI 表示ラベル
+# human_description: ユーザー向け説明
+# llm_description:   LLM 向け説明（Agent が推論する際の手がかり）
+# form:              llm = LLMが推論 / form = ユーザーが事前入力
+# default:           デフォルト値
+# min / max:         数値型の場合の最小値・最大値
+# options:           select 型の場合の選択肢
+#
+# --- type 一覧 ---
+#   string       : テキスト
+#   number       : 数値
+#   boolean      : 真偽値
+#   select       : ドロップダウン選択
+#   secret-input : 暗号化入力（機密情報）
+#   file         : 単一ファイル
+#   files        : 複数ファイル
+#   model-selector : モデル選択
+#   app-selector   : アプリケーション選択
+#
+# --- form の動作 ---
+#   Agent アプリ:
+#     llm  → LLM がパラメータを推論する
+#     form → ユーザーが会話前に事前設定する
+#   Workflow アプリ:
+#     llm  → ツールノードの入力変数として表示される
+#     form → フロントエンドで入力する
+# =============================================================================
+
+parameters:
+  # --- メインパラメータ（LLM が推論） ---
+  - name: query                              # TODO: パラメータ名を変更
+    type: string
+    required: true
+    label:
+      en_US: Query
+      ja_JP: クエリ
+    human_description:
+      en_US: The input query for the tool.
+      ja_JP: ツールへの入力クエリ。
+    llm_description: >
+      The main input for this tool. Describe clearly what the LLM should
+      provide here so it can infer the correct value from the conversation.
+    form: llm
+
+  # --- オプションパラメータ（ユーザーが事前設定） ---
+  - name: max_results                        # TODO: 不要なら削除
+    type: number
+    required: false
+    default: 5
+    min: 1
+    max: 50
+    label:
+      en_US: Max Results
+      ja_JP: 最大件数
+    human_description:
+      en_US: Maximum number of results to return.
+      ja_JP: 返す結果の最大件数。
+    form: form
+
+  # --- select 型の例（不要なら削除） ---
+  # - name: output_format
+  #   type: select
+  #   required: false
+  #   default: "json"
+  #   label:
+  #     en_US: Output Format
+  #     ja_JP: 出力形式
+  #   human_description:
+  #     en_US: The format of the output.
+  #     ja_JP: 出力のフォーマット。
+  #   options:
+  #     - value: "json"
+  #       label:
+  #         en_US: JSON
+  #     - value: "text"
+  #       label:
+  #         en_US: Plain Text
+  #   form: form
+
+  # --- file 型の例（不要なら削除） ---
+  # - name: input_file
+  #   type: file
+  #   required: false
+  #   label:
+  #     en_US: Input File
+  #     ja_JP: 入力ファイル
+  #   human_description:
+  #     en_US: An optional file to process.
+  #     ja_JP: 処理するファイル（任意）。
+  #   form: llm
+
+# =============================================================================
+# 実装コードの指定
+# =============================================================================
+
+extra:
+  python:
+    source: tools/my_tool.py                 # TODO: 実装ファイルのパスに合わせる（プラグインルートからの相対パス）

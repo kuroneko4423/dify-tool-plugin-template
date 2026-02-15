@@ -1,0 +1,75 @@
+# =============================================================================
+# Tool Provider 定義
+# =============================================================================
+# このファイルはプラグインの基本情報と認証設定のエントリーポイントです。
+# Dify のプラグイン管理画面に表示される情報を定義します。
+#
+# TODO: 以下の項目をプロジェクトに合わせて変更してください。
+# =============================================================================
+
+identity:
+  author: your-name                          # TODO: 作者名
+  name: my_tool                              # TODO: プロバイダーID（一意）
+  label:
+    en_US: My Tool                           # TODO: 英語表示名
+    ja_JP: マイツール                         # TODO: 日本語表示名
+  description:
+    en_US: A brief description of what this tool does.
+    ja_JP: このツールの簡単な説明。           # TODO: 説明を変更
+  icon: icon.svg
+  tags:
+    - utilities                              # TODO: 適切なタグに変更
+    # 利用可能なタグ:
+    #   search, image, videos, weather, finance, design, travel,
+    #   social, news, medical, productivity, education, business,
+    #   entertainment, utilities, other
+
+# =============================================================================
+# 認証情報（credentials）の定義
+# =============================================================================
+# 外部APIキーなどの認証情報が必要な場合に定義します。
+# 不要な場合は credentials_for_provider セクション全体を削除できます。
+
+credentials_for_provider:
+  api_key:                                   # TODO: 変数名を変更
+    type: secret-input                       # secret-input / text-input / select
+    required: true
+    label:
+      en_US: API Key
+      ja_JP: APIキー
+    placeholder:
+      en_US: Enter your API key
+      ja_JP: APIキーを入力してください
+    help:
+      en_US: Get your API key from the service dashboard.
+      ja_JP: サービスのダッシュボードからAPIキーを取得してください。
+    url: https://example.com/api-keys        # TODO: APIキー取得先のURLに変更
+
+  # --- 追加の認証フィールド例（不要なら削除） ---
+  # api_base_url:
+  #   type: text-input
+  #   required: false
+  #   label:
+  #     en_US: API Base URL
+  #     ja_JP: APIベースURL
+  #   placeholder:
+  #     en_US: "https://api.example.com"
+  #   default: "https://api.example.com"
+
+# =============================================================================
+# ツール定義ファイルの一覧
+# =============================================================================
+# このプロバイダーに含まれるツールの YAML ファイルを列挙します。
+# ツールを追加する場合はここにも追記してください。
+
+tools:
+  - tools/my_tool.yaml                       # TODO: ツールYAMLのパスに合わせる
+  # - tools/another_tool.yaml               # ツール追加時にコメントを外す
+
+# =============================================================================
+# 実装コードの指定
+# =============================================================================
+
+extra:
+  python:
+    source: provider/my_tool.py               # TODO: プロバイダー実装ファイル名に合わせる（プラグインルートからの相対パス）

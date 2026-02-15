@@ -1,0 +1,48 @@
+version: 0.0.1
+type: plugin
+author: "your-name"                          # TODO: 作者名を変更
+name: "my_tool"                              # TODO: プラグイン名を変更（英数字・ハイフン・アンダースコアのみ）
+description:
+  en_US: "A brief description of your tool plugin."
+  ja_JP: "ツールプラグインの簡単な説明。"    # TODO: 説明を変更
+icon: "icon.svg"
+label:
+  en_US: "My Tool"                           # TODO: 表示名を変更
+  ja_JP: "マイツール"
+created_at: "2025-02-15T00:00:00.000Z"       # TODO: 作成日を変更
+resource:
+  memory: 268435456                          # 256MB
+  permission:
+    tool:
+      enabled: true
+    model:
+      enabled: false
+      llm: false
+      text_embedding: false
+      rerank: false
+      tts: false
+      speech2text: false
+      moderation: false
+    node:
+      enabled: false
+    endpoint:
+      enabled: false
+    app:
+      enabled: false
+    storage:
+      enabled: true
+      size: 1048576                          # 1MB
+  verify:
+    enabled: false
+plugins:
+  tools:
+    - "provider/my_tool.yaml"                # TODO: プロバイダーYAMLのパスに合わせる
+meta:
+  version: "0.0.1"
+  arch:
+    - "amd64"
+    - "arm64"
+  runner:
+    language: "python"
+    version: "3.12"
+    entrypoint: "main"
