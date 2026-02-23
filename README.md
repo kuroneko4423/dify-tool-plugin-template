@@ -373,6 +373,112 @@ python3 --version  # 3.12 以上であること
 
 また、venv を有効化してからインストールしているか確認してください。
 
+### バイナリファイルアップロード時の接続エラー
+
+`Upload File (File Variable)` ツールで接続エラーが発生する場合、Dify の Docker 環境における内部ネットワーク設定が原因です。
+
+#### `[Errno 110] Connection timed out`
+
+**原因**: プラグインコンテナから Dify の外部 URL（`FILES_URL` に設定された IP アドレス）に到達できません。
+
+**対処法**: Dify の `.env` に `INTERNAL_FILES_URL` を設定してください。
+
+```bash
+# Dify の docker/.env に追加
+INTERNAL_FILES_URL=http://api:5001
+```
+
+設定後、Dify を再起動してください。
+
+```bash
+docker compose down && docker compose up -d
+```
+
+> **背景**: Dify はファイルの URL を `FILES_URL`（例: `http://192.168.1.101:8082`）から生成しますが、プラグインコンテナからこの外部 IP には到達できません。本プラグインは `INTERNAL_FILES_URL` 環境変数を読み取り、ファイル取得先を Docker 内部ネットワークのサービス名（`api:5001`）に自動書き換えします。
+
+#### `Server error '503 Service Unavailable'`
+
+**原因**: SSRF プロキシ経由でプライベート IP（`192.168.x.x` 等）にアクセスしようとして、プロキシにブロックされています。
+
+**対処法**: 上記の `INTERNAL_FILES_URL` を設定してください。本プラグインは Dify 内部ファイルのダウンロード時に SSRF プロキシをバイパスする設計になっています。
+
+#### `[Errno 111] Connection refused`
+
+**原因**: `INTERNAL_FILES_URL` に設定したホスト/ポートが正しくありません。
+
+**対処法**: 以下の値を試してください。
+
+| 設定値 | 説明 |
+|--------|------|
+| `http://api:5001` | Dify API サーバー直接（推奨） |
+| `http://nginx:80` | nginx 経由（環境によってはポートが異なる場合あり） |
+
+API サーバーが port 5001 でリッスンしていることは、Dify のログで確認できます。
+
+```
+api-1 | Listening at: http://0.0.0.0:5001
+```
+
+#### `storageQuotaExceeded` (403)
+
+**原因**: サービスアカウントにはストレージクォータがないため、個人ドライブへのアップロードが拒否されています。
+
+**対処法**: Google Workspace の共有ドライブ（Shared Drive）のフォルダを使用してください。
+
+1. [Google Workspace](https://workspace.google.com/) のアカウントで [Google Drive](https://drive.google.com) にアクセス
+2. 左メニューの「共有ドライブ」→「新しい共有ドライブ」を作成
+3. 作成した共有ドライブで「メンバーを管理」を開き、サービスアカウントのメールアドレス（`xxx@xxx.iam.gserviceaccount.com`）を**コンテンツ管理者**以上の権限で追加
+4. 共有ドライブ内にアップロード先フォルダを作成
+5. フォルダの URL（`https://drive.google.com/drive/folders/<FOLDER_ID>`）から **フォルダ ID** を取得
+6. Dify のプラグイン設定で `Default Folder ID` に設定、またはワークフローのツールパラメータ `folder_id` に指定
+
+> **注意**: 無料の Google アカウントでは共有ドライブを作成できません。Google Workspace（Business Starter 以上）が必要です。
+
+### 認証エラー
+
+```
+Failed to validate Google Drive credentials: ...
+```
+
+- Google Cloud Console で **Google Drive API** が有効になっているか確認
+- JSON キーファイルの内容が正しくコピーされているか確認（先頭の `{` から末尾の `}` まで）
+- サービスアカウントのキーが失効していないか確認
+
+### 権限エラー
+
+```
+The caller does not have permission
+```
+
+- 操作対象のフォルダがサービスアカウントのメールアドレスに共有されているか確認
+- 共有権限が「閲覧者」ではなく「**編集者**」になっているか確認
+- 共有ドライブの場合、サービスアカウントがメンバーとして追加されているか確認
+
+### Google Workspace ファイルの読み取りが期待通りにならない
+
+Google Workspace ファイルは自動的にエクスポートされます:
+
+| Google Workspace タイプ | エクスポート形式 |
+|-------------------------|------------------|
+| Google ドキュメント | プレーンテキスト |
+| Google スプレッドシート | CSV |
+| Google スライド | プレーンテキスト |
+| Google 図形描画 | PNG（バイナリとして返却） |
+
+- 書式やレイアウト情報はエクスポート時に失われます
+- Google スプレッドシートは最初のシートのみがエクスポートされます
+
+### プロキシ関連の接続エラー
+
+```
+Error uploading file: ... | Proxy env vars: {...}
+```
+
+- Dify の Docker 環境でプロキシが設定されている場合、プラグインは自動的にプロキシを検出します
+- プロキシ検出の対象環境変数: `HTTPS_PROXY`, `HTTP_PROXY`, `SSRF_PROXY_HTTPS_URL`, `SSRF_PROXY_HTTP_URL`, `SANDBOX_HTTPS_PROXY`, `SANDBOX_HTTP_PROXY`
+- エラーメッセージに含まれる `Proxy env vars` の内容を確認し、プロキシ設定が正しいか確認してください
+- プロキシサーバーが `https://www.googleapis.com` へのアクセスを許可しているか確認してください
+
 ## 参考リンク
 
 - [Dify Plugin 公式ドキュメント](https://docs.dify.ai/en/develop-plugin/dev-guides-and-walkthroughs/cheatsheet)
